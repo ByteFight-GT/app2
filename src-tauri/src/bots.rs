@@ -1,6 +1,7 @@
 //! Bots: folders inside "Bots Directory" containing `__init__.py` and `controller.py`.
 
 use std::fs;
+use std::io;
 use std::path::Path;
 
 use serde_json::json;
@@ -37,7 +38,12 @@ pub async fn bots_list(state: State<'_, AppState>) -> CmdResult {
         (|| {
             let bots_dir = state.configured_dir("Bots Directory")?;
             let mut bots: Vec<String> = fs::read_dir(&bots_dir)
-                .map_err(|e| format!("{}: {e}", display(&bots_dir)))?
+                .map_err(|e| match e.kind() {
+                    io::ErrorKind::NotFound => {
+                        format!("The directory {} doesn't exist", display(&bots_dir))
+                    }
+                    _ => format!("{}: {e}", display(&bots_dir)),
+                })?
                 .filter_map(Result::ok)
                 .filter(|e| e.path().is_dir() && validate_bot(&e.path()))
                 .filter_map(|e| e.file_name().into_string().ok())

@@ -4,6 +4,7 @@ import React from 'react';
 import { useToast } from '@/hooks/useToast';
 import { useLoadings } from './useLoadings';
 import { word } from '../../common/utils';
+import { useSettings } from './useSettings';
 
 export type UseBotsValue = {
   bots: string[];
@@ -17,6 +18,10 @@ export const BotsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [bots, setBots] = React.useState<string[]>([]);
   const {loadings, toggleLoading} = useLoadings();
   const {toast, toastError} = useToast();
+
+  // for refreshing bot list when bots dir changes
+  const { settings } = useSettings();
+  const botsDir = settings["Bots Directory"]?.value;
 
   // >>> HANDLERS
 
@@ -69,8 +74,9 @@ export const BotsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // >>> INITIAL SETUP
 
   React.useEffect(() => {
+    if (botsDir === undefined) return;
     fetchBotList();
-  }, []);
+  }, [botsDir]);
 
   const value = React.useMemo(() => ({
     bots,
