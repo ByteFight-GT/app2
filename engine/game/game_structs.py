@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .game_constants import GameConstants
 
@@ -24,6 +24,12 @@ Location = tuple[Coordinate, Coordinate]
 Cell = Literal[0, 1, 2]
 Row = Annotated[list[Cell], Field(min_length=GameConstants.BOARD_SIZE, max_length=GameConstants.BOARD_SIZE)]
 Grid = Annotated[list[Row], Field(min_length=GameConstants.BOARD_SIZE, max_length=GameConstants.BOARD_SIZE)]
+
+
+def _MAX_STONES() -> int:
+    """Most stones one turn can place. Read at validation time so a tuned
+    DEFUSE_BONUS_STONES takes effect without rebuilding the models."""
+    return 2 + GameConstants.DEFUSE_BONUS_STONES
 
 
 def opponent_of(player: Player) -> Player:
@@ -58,22 +64,40 @@ class GameState(BaseModel):
     # Your own turns left, out of MAX_TURNS_PER_PLAYER, including this one.
     turns_remaining: int
     opponent_turns_remaining: int
+    # Stones to place this turn: 1 on black's first turn, 2 plus
+    # DEFUSE_BONUS_STONES after your successful defuse, else 2.
+    moves_required: int
+    # Stones the opponent places next turn (more after their successful defuse).
+    opponent_moves_required: int
     # Remaining wall-clock seconds.
     time_left: float
     opponent_time_left: float
     # Publicly known (successfully defused) mine locations.
     revealed_mines: list[Location]
     stone_counts: StoneCounts
-    # Always length 2: the chosen-move stones from your previous turn, not
-    # bonus stones from a defuse.
-    last_signals: Annotated[list[SignalReading], Field(min_length=2, max_length=2)]
+    # One reading per stone you placed last turn, padded to at least 2.
+    last_signals: Annotated[list[SignalReading], Field(min_length=2)]
+
+    @field_validator("last_signals")
+    @classmethod
+    def _cap_signals(cls, value):
+        if len(value) > _MAX_STONES():
+            raise ValueError(f"at most {_MAX_STONES()} signal readings")
+        return value
 
 
 class Action(BaseModel):
     """
     One full turn: an optional defuse attempt, then the stones to place.
-    moves has length 1 on black's very first turn, else length 2.
+    moves must have exactly GameState.moves_required entries.
     """
 
     defuse: Location | None = None
-    moves: Annotated[list[Location], Field(min_length=1, max_length=2)]
+    moves: Annotated[list[Location], Field(min_length=1)]
+
+    @field_validator("moves")
+    @classmethod
+    def _cap_moves(cls, value):
+        if len(value) > _MAX_STONES():
+            raise ValueError(f"at most {_MAX_STONES()} moves")
+        return value

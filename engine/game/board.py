@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
@@ -22,9 +23,7 @@ _CHAR: Dict[Player, str] = {"black": "B", "white": "W"}
 class TurnRecord:
     """
     What the acting player needs, next time it's their turn, to generate
-    detector signals for their *previous* turn's chosen-move stones. Bonus
-    stones from a successful defuse are excluded because they never generate
-    signals.
+    detector signals for their *previous* turn's chosen-move stones.
 
     mines_snapshot is the hidden-mine layout as it stood immediately before
     this turn's own placements: signal strength is computed against that
@@ -42,7 +41,6 @@ class TurnRecord:
     move_outcomes: List[str] = field(default_factory=list)  # one MoveResolution per move
     triggered_mines: List[Location] = field(default_factory=list)
     removed_stones: List[Location] = field(default_factory=list)  # cleared by a blast
-    bonus_stones: List[Location] = field(default_factory=list)  # from a successful defuse
     revealed_mine: Optional[Location] = None
 
 
@@ -61,6 +59,9 @@ class Board:
         self.revealed_mines: Set[Location] = set()
         self.turn_index: int = 0  # total completed turns, 0..MAX_TURNS_PER_PLAYER * 2
         self.turns_taken: Dict[Player, int] = {"black": 0, "white": 0}
+        # A successful defuse gives that player DEFUSE_BONUS_STONES extra
+        # stones next turn.
+        self.extra_move: Dict[Player, bool] = {"black": False, "white": False}
 
     # --- setup ---
 
@@ -91,10 +92,11 @@ class Board:
     def _detector_cells(self, loc: Location) -> List[Location]:
         lr, lc = loc
         thresh = GameConstants.DETECTOR_RADIUS_SQ
+        reach = math.isqrt(thresh)
         return [
             (r, c)
-            for r in range(lr - 2, lr + 3)
-            for c in range(lc - 2, lc + 3)
+            for r in range(lr - reach, lr + reach + 1)
+            for c in range(lc - reach, lc + reach + 1)
             if (r - lr) ** 2 + (c - lc) ** 2 <= thresh
         ]
 
@@ -103,8 +105,12 @@ class Board:
     def current_player(self) -> Player:
         return "black" if self.turn_index % 2 == 0 else "white"
 
-    def required_move_count(self) -> int:
-        return 1 if self.turn_index == 0 else 2
+    def required_move_count(self, player: Optional[Player] = None) -> int:
+        """Stones `player` (default: the side to move) must place on their next turn."""
+        player = player or self.current_player()
+        if player == "black" and self.turns_taken["black"] == 0:
+            return 1
+        return 2 + GameConstants.DEFUSE_BONUS_STONES if self.extra_move[player] else 2
 
     def is_over(self) -> bool:
         return self.turn_index >= GameConstants.MAX_TURNS_PER_PLAYER * 2
@@ -157,19 +163,6 @@ class Board:
         ]
         return outcomes, triggered, removed
 
-    def _place_random_bonus(self, player: Player, exclude: Set[Location]) -> List[Location]:
-        char = _CHAR[player]
-        candidates = [
-            (r, c)
-            for r in range(self.size)
-            for c in range(self.size)
-            if self.grid[r][c] == "." and (r, c) not in self.mines and (r, c) not in exclude
-        ]
-        chosen = self._rng.sample(candidates, min(2, len(candidates)))
-        for r, c in chosen:
-            self.grid[r][c] = char
-        return chosen
-
     def apply_turn(
         self, player: Player, defuse: Optional[Location], moves: List[Location]
     ) -> Optional[TurnRecord]:
@@ -193,7 +186,6 @@ class Board:
                 if not self._validate_moves(moves):
                     return None
                 outcomes, triggered, removed = self._place_and_resolve(player, moves)
-                bonus = self._place_random_bonus(player, exclude=set(moves))
                 record = TurnRecord(
                     signals_data=[(m, o != "placed") for m, o in zip(moves, outcomes)],
                     defuse_attempted=True,
@@ -203,7 +195,6 @@ class Board:
                     move_outcomes=outcomes,
                     triggered_mines=triggered,
                     removed_stones=removed,
-                    bonus_stones=bonus,
                     revealed_mine=defuse,
                 )
             else:
@@ -229,6 +220,8 @@ class Board:
                 removed_stones=removed,
             )
 
+        # The extra move lasts one turn, so only a successful defuse sets it.
+        self.extra_move[player] = bool(record.defuse_success)
         self.turn_index += 1
         self.turns_taken[player] += 1
         return record

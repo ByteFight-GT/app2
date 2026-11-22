@@ -14,27 +14,35 @@ class GameConstants:
 
     # Mines
     NUM_MINES: int = 20
-    # Explosion is a 3x3 square centered on the triggered mine (offsets in
-    # [-BLAST_RADIUS, BLAST_RADIUS] on both axes).
-    BLAST_RADIUS: int = 1
+    # Explosion is a 5x5 square centered on the triggered mine (offsets in
+    # [-BLAST_RADIUS, BLAST_RADIUS] on both axes). A bigger blast makes each
+    # detonation cost more, so reading the detector pays off.
+    BLAST_RADIUS: int = 2
 
-    # Detector: mines are counted within Euclidean distance <= 2 of the
-    # placed stone, a 13 cell rounded diamond (see Board._detector_cells).
-    DETECTOR_RADIUS_SQ: int = 4
+    # Detector: mines are counted within Euclidean distance <= sqrt(2) of the
+    # placed stone, the 3x3 square around it (see Board._detector_cells).
+    # Small and sharp so a strong bot can localise mines; with the old 13
+    # cell window even exact inference rarely could.
+    DETECTOR_RADIUS_SQ: int = 2
 
-    # Nearby-mine-count -> signal category thresholds: 0-1 -> low,
-    # 2-3 -> medium, 4+ -> high.
-    LOW_MAX: int = 1
-    MEDIUM_MAX: int = 3
+    # Nearby-mine-count -> signal category thresholds: 0 -> low, 1 -> medium,
+    # 2+ -> high. A single mine must change the reading or it is invisible.
+    LOW_MAX: int = 0
+    MEDIUM_MAX: int = 1
 
     # Detector noise matrix: NOISE_MATRIX[actual][reported] -> percentage
     # weight. The "none" signal (unsuccessful placement) is never noisy and
     # has no row here (see Board.noisy_signal).
     NOISE_MATRIX = {
-        "low": {"low": 75, "medium": 20, "high": 5},
-        "medium": {"low": 15, "medium": 70, "high": 15},
-        "high": {"low": 5, "medium": 20, "high": 75},
+        "low": {"low": 95, "medium": 4, "high": 1},
+        "medium": {"low": 2, "medium": 95, "high": 3},
+        "high": {"low": 1, "medium": 4, "high": 95},
     }
+
+    # Extra stones a successful defuse earns on that player's next turn. At 2
+    # even a reckless defuser at 40% success comes out ahead, which flattens
+    # skill; at 1 only a well calibrated read pays.
+    DEFUSE_BONUS_STONES: int = 1
 
     # Turn flow
     MAX_TURNS_PER_PLAYER: int = 50

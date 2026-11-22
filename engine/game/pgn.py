@@ -78,6 +78,7 @@ class GamePGN(BaseModel):
     move_outcomes: List[List[MoveResolution]] = Field(default_factory=list)
     defuse_attempts: List[Optional[MapLoc]] = Field(default_factory=list)
     defuse_results: List[DefuseOutcome] = Field(default_factory=list)
+    # Always empty since defuses no longer place stones. Kept for the renderer.
     random_stones: List[List[MapLoc]] = Field(default_factory=list)
     triggered_mines: List[List[MineTrigger]] = Field(default_factory=list)
     removed_stones: List[List[RemovedStone]] = Field(default_factory=list)
@@ -156,7 +157,7 @@ class PGNRecorder:
             p.defuse_results.append("not_attempted")
         else:
             p.defuse_results.append("success" if record.defuse_success else "failure")
-        p.random_stones.append(list(record.bonus_stones))
+        p.random_stones.append([])
         p.triggered_mines.append(
             [MineTrigger(loc=loc, explosion_cells=board.blast_cells(loc)) for loc in record.triggered_mines]
         )
