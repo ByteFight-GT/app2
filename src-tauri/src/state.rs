@@ -4,16 +4,13 @@ use serde_json::{Map, Value};
 
 use crate::gameconfig::GameConfig;
 use crate::matches::MatchIndexEntry;
-use crate::paths::AppPaths;
+use crate::paths::StorageLocs;
 use crate::runner::ActiveRun;
 
 pub type Settings = Map<String, Value>;
 
-/// All backend state, registered with `app.manage()`.
-///
-/// Everything uses `std::sync::Mutex`: guards are never held across `.await`.
 pub struct AppState {
-    pub paths: AppPaths,
+    pub paths: StorageLocs,
     pub config: GameConfig,
     /// Cached contents of `settings.json` (`None` until the first successful refresh).
     pub settings: Mutex<Option<Settings>>,
@@ -24,7 +21,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(paths: AppPaths, config: GameConfig) -> Self {
+    pub fn new(paths: StorageLocs, config: GameConfig) -> Self {
         Self {
             paths,
             config,

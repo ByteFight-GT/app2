@@ -8,13 +8,13 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Clone)]
-pub struct AppPaths {
+pub struct StorageLocs {
     pub data: PathBuf,
     pub resources: PathBuf,
 }
 
-impl AppPaths {
-    pub fn from_app(app: &AppHandle) -> Result<Self, String> {
+impl StorageLocs {
+    pub fn new(app: &AppHandle) -> Result<Self, String> {
         let data = app
             .path()
             .app_data_dir()
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn resolves_app_relative() {
-        let p = AppPaths {
+        let p = StorageLocs {
             data: PathBuf::from("/data"),
             resources: PathBuf::from("/res"),
         };

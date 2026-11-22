@@ -17,42 +17,41 @@ mod util;
 use tauri::{Manager, RunEvent};
 
 use crate::gameconfig::GameConfig;
-use crate::paths::AppPaths;
+use crate::paths::StorageLocs;
 use crate::state::AppState;
 
-/// Startup initialization, in order. Settings must come first since every
-/// directory lookup goes through them. Later steps log and continue on error
-/// so one broken directory doesn't keep the app from opening.
-type InitStep = (&'static str, fn(&AppState) -> Result<(), String>);
-
-fn init_backend(state: &AppState) -> Result<(), String> {
-    state.refresh_settings()?;
-
-    let steps: [InitStep; 5] = [
-        ("engine", engine::init),
-        ("maps", maps::init), // seeds default maps only if gameconfig enables maps
-        ("bots", bots::init),
-        ("matches", matches::init),
-        ("logs", logs::init),
-    ];
-    for (name, step) in steps {
-        if let Err(e) = step(state) {
-            eprintln!("[init] {name}: {e}");
-        }
-    }
-    Ok(())
-}
 
 fn main() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let paths = AppPaths::from_app(app.handle())?;
-            println!("[init] data dir: {}", paths.data.display());
-            let state = AppState::new(paths, GameConfig::load());
-            init_backend(&state)?;
-            app.manage(state);
+            // paths where things like bots/resources are stored
+            let storage_locs = StorageLocs::new(app.handle())?;
+
+            let appstate = AppState::new(storage_locs, GameConfig::load());
+            
+
+            // init all our unpaid workers:
+            appstate.refresh_settings()?;
+
+            if let Err(e) = engine::init(&appstate) {
+                eprintln!("error initializing engine: {e}");
+            }
+            if let Err(e) = maps::init(&appstate) {
+                eprintln!("error initializing maps: {e}");
+            }
+            if let Err(e) = bots::init(&appstate) {
+                eprintln!("error initializing bots: {e}");
+            }
+            if let Err(e) = matches::init(&appstate) {
+                eprintln!("error initializing matches: {e}");
+            }
+            if let Err(e) = logs::init(&appstate) {
+                eprintln!("error initializing logs: {e}");
+            }
+
+            app.manage(appstate);
 
             #[cfg(debug_assertions)]
             if let Some(window) = app.get_webview_window("main") {
