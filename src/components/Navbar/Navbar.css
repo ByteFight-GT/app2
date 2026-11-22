@@ -1,0 +1,131 @@
+.navbar-container {
+	height: 100vh;
+	width: fit-content;
+	display: flex;
+	flex-direction: column;
+	font-family: var(--font-mono);
+	background-color: hsl(var(--secondary));
+	border-right: 2px solid hsl(var(--border));
+}
+
+.navbar-logo {
+	width: 2rem;
+	margin: 0.5rem auto;
+}
+
+.navbar-link {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border-bottom: 2px solid hsl(var(--border));
+}
+.navbar-link:first-of-type {
+	border-top: 2px solid hsl(var(--border));
+}
+
+.navbar-link-icon {
+	width: 2rem;
+	image-rendering: pixelated;
+}
+.navbar-link.selected .navbar-link-icon {
+	filter: brightness(2) saturate(1.5);
+}
+
+.navbar-link-label {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+}
+.navbar-link.selected .navbar-link-label {
+	color: hsl(var(--foreground));
+}
+
+/* 
+for the triangle "arrow" on the right side of selected tab.
+::after is the actual area, ::before is the border
+*/
+.navbar-link.selected {
+	--arrow-width: 0.5rem;
+	--border-width: 2px;
+	background-color: hsl(var(--background));
+}
+.navbar-link.selected::after {
+	z-index: 2;
+	content: "";
+	position: absolute;
+	left: calc(100% - var(--border-width));
+	top: 50%;
+	transform: translateY(-50%);
+	width: calc(var(--arrow-width) + var(--border-width));
+	height: 100%;
+	clip-path: polygon(0% 0%, var(--border-width) 0%, 100% 50%, var(--border-width) 100%, 0% 100%);
+	background-color: hsl(var(--background));
+}
+.navbar-link.selected::before {
+	z-index: 1;
+	content: "";
+	position: absolute;
+	left: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	width: calc(var(--arrow-width) + var(--border-width));
+	height: calc(100% + calc(var(--border-width) * 6)); /* this multiplier needs to change based on triangle eccentricity */
+	clip-path: polygon(0 0%, 100% 50%, 0 100%);
+	background-color: hsl(var(--border));
+}
+
+.navbar-bottom-buttons {
+	margin-top: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+
+	margin-bottom: 1rem;
+	overflow-x: hidden;
+}
+.navbar-button {
+	border: none;
+	width: fit-content;
+	padding: 0.5rem;
+	cursor: pointer;
+	user-select: none;
+	border: 2px solid hsl(var(--border));
+	background-color: hsl(var(--background) 0.25);
+}
+.navbar-button.selected {
+	border-color: hsl(var(--primary));
+	background-color: hsl(var(--primary) / 0.25);
+}
+
+.navbar-bottom-version {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	word-wrap: break-word;
+	max-width: 100%;
+}
+
+.navbar-sponsors {
+	padding: 0 1rem;
+	margin-top: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.navbar-sponsors-logos {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+
+.navbar-sponsor-logo {
+    height: 1.75rem; /* Max height for the logo */
+    width: 100%; /* Take up the full width of the container */
+    max-width: 4.5rem; /* Max width for the logo */
+    object-fit: contain; /* This is the key property to prevent squishing */
+    opacity: 1; 
+}

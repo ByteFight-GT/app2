@@ -1,0 +1,38 @@
+{
+	"Python Path": {
+		"__type": "string",
+		"__placeholder": "e.g. python3",
+		"__desc": "Path or command for the Python executable to use for running games. If python is on your PATH, something like \"python\" or \"python3\" should work. If not, or you'd like to use a specific python installation, provide the complete absolute path to the executable.",
+		"__addSeparatorBelow": true,
+		"value": "python"
+	},
+	"Bots Directory": {
+		"__type": "string",
+		"__placeholder": "$/bots",
+		"__desc": "Directory to search in when looking for bots. Will look for FOLDERS in this directory that have __init__.py and agent.py files. Do not set to the directory of any specific bot. Prefix with \"$/\" to start relative to the default bytefight client userdata directory.",
+		"__showExplorerOptions": true,
+		"value": "$/bots"
+	},
+	"Matches Directory": {
+		"__type": "string",
+		"__placeholder": "$/matches",
+		"__desc": "Directory for saving and loading match data. These don't contain any information about the games themselves, only metadata. Prefix with \"$/\" to start relative to the default bytefight client userdata directory.",
+		"__showExplorerOptions": true,
+		"value": "$/matches"
+	},
+	"Games Directory": {
+		"__type": "string",
+		"__placeholder": "$/games",
+		"__desc": "Directory for saving and loading game data. These are the PGNs that specify actual game states/moves. Prefix with \"$/\" to start relative to the default bytefight client userdata directory.",
+		"__showExplorerOptions": true,
+		"value": "$/games"
+	},
+	"Logs Directory": {
+		"__type": "string",
+		"__placeholder": "$/logs",
+		"__desc": "Directory for saving and loading stdio logs of game runs. Prefix with \"$/\" to start relative to the default bytefight client userdata directory.",
+		"__showExplorerOptions": true,
+		"__addSeparatorBelow": true,
+		"value": "$/logs"
+	}
+}

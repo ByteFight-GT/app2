@@ -1,0 +1,9 @@
+.button-bevel {
+	box-shadow: inset 0 -2px 0 0 #0006;
+}
+.dark-on-hover-active:not(:disabled):hover {
+	filter: brightness(80%);
+}
+.dark-on-hover-active:not(:disabled):active {
+	filter: brightness(70%);
+}

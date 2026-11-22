@@ -1,0 +1,253 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Sometype+Mono:ital,wght@0,400..700;1,400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --themecolor: 0 0% 0%; /* black */
+    --background: 20 6% 6%;
+    --foreground: 60 9% 95%;
+    --card: 20 14% 4%;
+    --card-foreground: 60 9% 95%;
+    --popover: 20 14% 4%;
+    --popover-foreground: 60 9% 95%;
+    --primary: 48 96% 55%;
+    --primary2: 32 88% 40%;
+    --primary-foreground: var(--negative-foreground);
+    --negative-foreground: 0 0% 15%;
+    --secondary: 20 2% 10%;
+    --secondary-foreground: 60 5% 75%;
+    --muted: 12 6% 15%;
+    --muted-foreground: 320 2% 50%;
+    --accent: 12 6.5% 15%;
+    --accent-foreground: 60 9% 95%;
+    --destructive: 355 65% 50%;
+    --destructive-bright: 350 70% 55%;
+    --destructive-foreground: 60 10% 95%;
+    --success: 135 80% 50%;
+    --border: 12 6% 18%;
+    --gold: 35 65% 30%;
+    --gold-light: 36 40% 72%;
+    --gold-dark: 355 25% 30%;
+    --input: 12 6% 18%;
+    --ring: 35.5 92% 33%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --complementary: 240 40% 60%;
+    --complementary2: 260 35% 40%;
+
+    --radius: 0.0rem;
+    --radius2: 0.0rem;
+
+    --win-color: 87 45% 55%;
+    --draw-color: 0 0% 45%;
+    --loss-color: 355 40% 50%;
+    --fail-color: 320 55% 60%;
+
+    --rank1-color: 48 96% 55%;
+    --rank2-color: 210 30% 80%;
+    --rank3-color: 32 60% 50%;
+
+    --ta-highlight-color: 228 65% 60%;
+
+    --font-normal: 'Plus Jakarta Sans', system-ui, sans-serif;
+    /* --font-cursive: 'Libre Caslon Text', serif; */
+    --font-mono: 'Sometype Mono', 'Cascadia Mono', Consolas, monospace;
+    --navbar-bottomMargin: min(12vh, 6rem); /* spacing underneath navbar */
+    --navbar-topMargin: min(2vh, 1rem); /* dist from top of viewport */
+
+    --sponsor-supporter-tier: 60 1% 61%;
+    --sponsor-challenger-tier: 343 78% 53%;  
+    --sponsor-champion-tier: 320 91% 59%;
+    --sponsor-legend-tier: 41 100% 61%;
+
+    --team-a-color: 260 4% 54%;
+    --team-b-color: 0 100% 91%;
+
+    --scrollbar-size: 0.5rem;
+  }
+}
+
+body {
+  font-family: var(--font-mono);
+}
+
+/*
+.font-cursive {
+  font-family: var(--font-cursive);
+  font-style: italic;
+}
+*/
+
+.font-family-normal {
+  font-family: var(--font-normal);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+@layer base {
+  * {
+    @apply border-border
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: url("/bg.webp");
+    background-repeat: repeat;
+    background-attachment: fixed;
+  }
+}
+
+body, html {
+  overscroll-behavior: none;
+}
+
+/* makes all lucide icons have 1em size by default 
+(cuz i think otherwise it defaults to 24px always) */
+svg.lucide {
+  width: 1em;
+  height: 1em;
+}
+
+hr {
+  border-color: hsl(var(--border));
+  width: 100%;
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+*::-webkit-scrollbar-track {
+  background: hsl(var(--secondary));
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: var(--radius2);
+  background-color: hsl(var(--muted-foreground) / 0.5);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground) / 0.8);
+}
+*::-webkit-scrollbar-corner {
+  background: hsl(var(--secondary));
+}
+
+*:focus-visible {
+  outline: 1px solid hsl(var(--complementary));
+  outline-offset: 1px;
+}
+
+*::selection {
+  background-color: hsl(var(--complementary) / 0.5);
+  color: hsl(var(--foreground));
+}
+
+*::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
+}
+
+.vert-divider {
+  height: 1em;
+  width: 0;
+  border-left: 1px solid hsl(var(--border));
+}
+.vert-divider-full {
+  height: 100%;
+  width: 0;
+  border-left: 1px solid hsl(var(--border));
+}
+
+.border-gold {
+  border-color: hsl(var(--gold));
+}
+.border-gold-light {
+  border-color: hsl(var(--gold-light));
+}
+.border-gold-dark {
+  border-color: hsl(var(--gold-dark));
+}
+
+.border-gold-gradient {
+  position: relative;
+  border-color: transparent; /* actual border is done with the ::after pseudo-element */
+}
+.border-gold-gradient::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  padding: 1.2px;
+  background-image: linear-gradient(
+    182deg, 
+    hsl(var(--gold-dark)/0.4) 0%, 
+    hsl(var(--gold-dark)) 30%, 
+    hsl(var(--gold)) 40%,
+    hsl(var(--gold-dark)/0.4) 50%,
+    hsl(var(--gold-dark)/0.4) 80%, 
+    hsl(var(--gold)) 100%
+  );
+  background-position: 50% 100%;
+  background-size: 100% 400%;
+  mask: linear-gradient(#fff 0 0) content-box,  linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+          mask-composite: exclude;
+  pointer-events: none;
+  transition: background-position 0.3s ease-in-out;
+}
+.border-gold-gradient.gold-gradient-anim:hover::after {
+  background-position: 50% 0%;
+}
+
+.bright-on-hover {
+  transition: filter 0.2s ease-in-out;
+}
+.bright-on-hover:hover {
+  filter: brightness(1.1) contrast(1.1);
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-shadow {
+  box-shadow: 0px 10px 30px 5px hsl(var(--themecolor)/0.4);
+}
+
+.absolute-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
