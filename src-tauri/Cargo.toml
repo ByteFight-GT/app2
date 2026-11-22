@@ -5,11 +5,6 @@ description = "Bytefight desktop client"
 authors = ["ByteFight-GT"]
 edition = "2024"
 
-[lib]
-# The `_lib` suffix keeps the lib name distinct from the bin name (cargo#8519 on Windows).
-name = "bytefightapp_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
-
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
