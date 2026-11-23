@@ -21,13 +21,31 @@ Parent: SubprocessPlayerHandle sends one JSON GameState per line and reads one
 JSON Action per line. Replies are read on a thread because select() only works
 on sockets on Windows.
 
-Child: `python player_process.py <bot_dir>` loads <bot_dir>/controller.py and
-serves its PlayerController over stdio. Bot prints go to stderr, which the
-parent forwards to the client console tagged with the player's colour.
+Child: `python player_process.py <bot_dir>` imports the top-level .py files in
+<bot_dir> that mention PlayerController, and serves the one PlayerController
+subclass they define over stdio. The file can have any name. Bot prints go to
+stderr, which the parent forwards to the client console tagged with the
+player's colour.
 """
 
 _HERE = Path(__file__).resolve().parent
-BOT_ENTRYPOINT = "controller.py"
+CONTROLLER_MARKER = "PlayerController"
+
+
+def controller_files(bot_dir: Path) -> List[Path]:
+    """Top-level .py files in bot_dir that mention PlayerController.
+
+    A text check, so the server can validate a bot folder without importing it
+    and the child only imports files that might hold the controller.
+    """
+    files = []
+    for path in sorted(bot_dir.glob("*.py")):
+        try:
+            if CONTROLLER_MARKER in path.read_text(encoding="utf-8", errors="replace"):
+                files.append(path)
+        except OSError:
+            continue
+    return files
 
 
 class SubprocessPlayerHandle(PlayerHandle):
@@ -88,21 +106,22 @@ class SubprocessPlayerHandle(PlayerHandle):
         self._proc.wait()
 
 
-def _find_controller(module) -> type:
-    candidates: List[type] = [
+def _find_controller(modules) -> type:
+    # Only classes defined in the bot's own files count, so a controller one
+    # file imports from another isn't found twice.
+    chosen: List[type] = [
         obj
+        for module in modules
         for obj in vars(module).values()
         if inspect.isclass(obj)
         and issubclass(obj, PlayerController)
         and obj is not PlayerController
         and not inspect.isabstract(obj)
+        and obj.__module__ == module.__name__
     ]
-    # Prefer classes defined in controller.py over ones it imports.
-    own = [c for c in candidates if c.__module__ == module.__name__]
-    chosen = own or candidates
     if len(chosen) != 1:
-        names = ", ".join(c.__name__ for c in chosen) or "none"
-        raise SystemExit(f"{BOT_ENTRYPOINT} must define exactly one PlayerController subclass (found: {names})")
+        names = ", ".join(f"{c.__module__}.{c.__name__}" for c in chosen) or "none"
+        raise SystemExit(f"bot must define exactly one PlayerController subclass (found: {names})")
     return chosen[0]
 
 
@@ -115,9 +134,12 @@ def _serve(bot_dir: Path) -> None:
     # engine directory stays first, so the copy of game/ that ships in the
     # student zip can't shadow the engine's own.
     sys.path[1:1] = [str(bot_dir.parent), str(bot_dir)]
-    module = importlib.import_module(f"{bot_dir.name}.controller")
+    modules = [
+        importlib.import_module(bot_dir.name if path.stem == "__init__" else f"{bot_dir.name}.{path.stem}")
+        for path in controller_files(bot_dir)
+    ]
 
-    run_agent(_find_controller(module)(), stdout=protocol_out)
+    run_agent(_find_controller(modules)(), stdout=protocol_out)
 
 
 if __name__ == "__main__":

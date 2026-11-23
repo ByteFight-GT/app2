@@ -22,7 +22,8 @@ MapLoc = Location
 
 # placed: survived the turn. hit_mine: landed on a mine.
 # removed_by_mine: cleared by the other stone's blast.
-# ignored_defuse_failure: a failed defuse ended the turn before placement.
+# ignored_defuse_failure: never emitted, since a failed defuse still places
+# the stones. Kept for the renderer.
 # illegal: never emitted, since an illegal turn forfeits before it is recorded.
 MoveOutcome = Literal["placed", "hit_mine", "removed_by_mine", "ignored_defuse_failure", "illegal"]
 
@@ -31,7 +32,6 @@ _OUTCOME = {
     "placed": "placed",
     "detonated": "hit_mine",
     "destroyed": "removed_by_mine",
-    "skipped": "ignored_defuse_failure",
 }
 
 DefuseOutcome = Literal["not_attempted", "success", "failure"]

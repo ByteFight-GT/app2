@@ -52,6 +52,8 @@ def encode_obs(
         turns_remaining=board.turns_remaining(player),
         moves_required=board.required_move_count(player),
         opponent_moves_required=board.required_move_count(opponent),
+        defuses_remaining=board.defuses_left[player],
+        opponent_defuses_remaining=board.defuses_left[opponent],
         opponent_turns_remaining=board.turns_remaining(opponent),
         time_left=time_left,
         opponent_time_left=opponent_time_left,

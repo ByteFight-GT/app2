@@ -96,7 +96,7 @@ class GomokuController(GameController[Action, GameState]):
         files = []
         if self._pgn_path is not None:
             self._pgn_path.write_text(self.pgn.model_dump_json())
-            files.append(GameResultFile(path=self._pgn_path, slug="pgn", visibility="public"))
+            files.append(GameResultFile(path=self._pgn_path, slug="game_log", visibility="everyone"))
         return GomokuResult(status=status, files=files, reason=reason, turn_index=self.board.turn_index)
 
     def get_game_state(self, player: Player) -> GameState:

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from game import Action, Board, GomokuController
-from player_process import BOT_ENTRYPOINT, SubprocessPlayerHandle
+from player_process import SubprocessPlayerHandle, controller_files
 
 """
 Local match server for the ByteFight client (Connect-6 Mines).
@@ -115,8 +115,8 @@ def accept_client(port: int) -> socket.socket:
 
 
 def check_bot_dir(bot_dir: Path, name: str) -> None:
-    if not (bot_dir / BOT_ENTRYPOINT).is_file():
-        raise SystemExit(f"Error: {name} directory {bot_dir} has no {BOT_ENTRYPOINT}.")
+    if not controller_files(bot_dir):
+        raise SystemExit(f"Error: {name} directory {bot_dir} has no .py file defining a PlayerController.")
 
 
 def play_match(args: argparse.Namespace, stream: ClientStream, handles: List[SubprocessPlayerHandle]) -> None:

@@ -17,8 +17,9 @@ python local_server.py --a_dir <bot A> --b_dir <bot B> --output_dir <replay.json
 ```
 
 - Bot A plays black and moves first.
-- Each bot directory is a package (`__init__.py`) whose `controller.py`
-  defines one `PlayerController[Action, GameState]` subclass.
+- Each bot directory is a package (`__init__.py`) with exactly one
+  `PlayerController[Action, GameState]` subclass, in a top-level `.py` file of
+  any name.
 - Each bot runs in its own process under the 180 s match clock.
 - The match streams over TCP on `--output_port`. The protocol is described at
   the top of `local_server.py`.
