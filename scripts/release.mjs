@@ -38,7 +38,7 @@ const assetName = (n) => n.replace(/\s+/g, ".");
 // Files the updater can install, mapped to a latest.json platform key.
 // (Tauri v2 uses the installers themselves, except macOS which uses .app.tar.gz.)
 function platformFor(file) {
-  const arch = /aarch64|arm64/i.test(file) ? "aarch64" : "x86_64";
+  const arch = /aarch64|arm64|apple[_-]?silicon/i.test(file) ? "aarch64" : "x86_64";
   if (/\.AppImage$/i.test(file)) return `linux-${arch}`;
   if (/-setup\.exe$/i.test(file)) return `windows-${arch}`;
   if (/\.app\.tar\.gz$/i.test(file)) return `darwin-${arch}`;
