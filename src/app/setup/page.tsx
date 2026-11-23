@@ -180,7 +180,7 @@ const SetupPage = () => {
 	return (
 		<GenericPage
 		variant="thin"
-		titleEle="Setup"
+		titleEle={<span className='text-primary leading-normal'>Setup</span>}
 		subtitleEle="Get started running matches locally!">
 
 			<p className="text-muted-foreground mb-8">
