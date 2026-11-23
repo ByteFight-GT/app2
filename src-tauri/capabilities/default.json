@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Capability for the main window. All file/dialog/opener access goes through app commands in Rust, so no plugin permissions are exposed to JS.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "updater:default", "process:allow-restart"]
 }

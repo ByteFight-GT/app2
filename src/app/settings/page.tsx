@@ -20,10 +20,12 @@ import { SaveBar } from './components/SaveBar';
 import { Settings } from '../../../common/types';
 import { FolderOpenIcon, ExternalLinkIcon } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import { useUpdater } from '@/hooks/useUpdater';
 
 
 export default function SettingsPage() {
 
+	const { checkForUpdates } = useUpdater();
 	const {settings, saveSettings, openExplorerChooser, openAppRelativePathInExplorer} = useSettings();
 
 	const [draftChanges, setDraftChanges] = React.useState<Record<keyof Settings, Settings[keyof Settings]>>({});
@@ -129,6 +131,10 @@ export default function SettingsPage() {
 						</React.Fragment>
 					))
 				: <p className='text-center text-muted-foreground'>Loading config...</p>}
+				<hr className='my-4' />
+				<SettingsItem name="App updates" unsaved={false} desc={`Current version: v${process.env.NEXT_PUBLIC_APP_VERSION}`}>
+					<Button variant="secondary" onClick={() => checkForUpdates(true)}>Check for updates</Button>
+				</SettingsItem>
 			</div>
 			<SaveBar 
 			nUnsavedChanges={Object.keys(draftChanges).length}

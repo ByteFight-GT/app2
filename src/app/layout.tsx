@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Navbar from "@/components/Navbar/Navbar";
 import { AppStateProvider } from "@/hooks/provider";
 import { IPCWrapper } from "@/hooks/ipcWrapper";
+import { UpdateChecker } from "@/hooks/UpdateChecker";
 
 export const metadata: Metadata = {
   title: "Bytefight",
@@ -28,6 +29,7 @@ export default function RootLayout({
               {children}
             </div>
 
+            <UpdateChecker />
             <Toaster />
           </IPCWrapper>
         </AppStateProvider>
