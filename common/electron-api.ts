@@ -1,4 +1,4 @@
-import type { GameResult, MatchMetadata, Settings } from './types';
+import type { PersistentState, GameResult, MatchMetadata, Settings } from './types';
 import { GamePGN, type GameWinner } from '@/gamerenderer/competitions/cs6601_fa2026';
 
 export type IPCError = {
@@ -26,6 +26,9 @@ export type ProcessClosedEvent = {
 };
 
 export type ElectronAPI = {
+  persistentStateGet: () => Promise<PersistentState>;
+  persistentStateSet: (patch: Partial<PersistentState>) => Promise<IPCResult<{ state: PersistentState }>>;
+
   settingsGet: () => Promise<Settings | null>;
   settingsSet: (settings: Settings) => Promise<IPCResult<{ settings: Settings }>>;
   settingsChooseDir: (appRelativePath?: string) => Promise<{

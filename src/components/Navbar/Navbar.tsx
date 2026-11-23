@@ -29,6 +29,11 @@ const NAVBAR_LINKS = [
     link: "/mapbuilder",
   }] : []),
   {
+    icon: "setup",
+    label: "Setup",
+    link: "/setup",
+  },
+  {
     icon: "config",
     label: "Config",
     link: "/settings",

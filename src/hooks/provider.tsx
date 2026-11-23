@@ -5,6 +5,7 @@ import '@/lib/backend'; // installs window.electron (Tauri backend)
 import { gameConfig } from '@/lib/gameconfig';
 import { BotsProvider } from './useBots';
 import { MapsProvider } from './useMaps';
+import { PersistentStateProvider } from './usePersistentState';
 import { SettingsProvider } from './useSettings';
 import { MatchesProvider } from './useMatches';
 import { LoadingsProvider } from './useLoadings';
@@ -32,9 +33,11 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <LoadingsProvider>
       <SettingsProvider>
+        <PersistentStateProvider>
         <BotsProvider>
           {gameConfig.maps.enabled ? <MapsProvider>{inner}</MapsProvider> : inner}
         </BotsProvider>
+        </PersistentStateProvider>
       </SettingsProvider>
     </LoadingsProvider>
   );

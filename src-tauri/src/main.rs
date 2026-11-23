@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod persistent_state;
 mod bots;
 mod dialogs;
 mod engine;
@@ -30,10 +31,11 @@ fn main() {
             let storage_locs = StorageLocs::new(app.handle())?;
 
             let appstate = AppState::new(storage_locs, GameConfig::load());
-            
 
             // init all our unpaid workers:
             appstate.refresh_settings()?;
+            *appstate.persistent.lock().unwrap() =
+                persistent_state::PersistentState::load(&appstate.paths.persistent_state());
 
             if let Err(e) = engine::init(&appstate) {
                 eprintln!("error initializing engine: {e}");
@@ -60,6 +62,8 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            persistent_state::persistent_state_get,
+            persistent_state::persistent_state_set,
             settings::settings_refresh,
             settings::settings_get,
             settings::settings_set,

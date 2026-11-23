@@ -32,6 +32,10 @@ impl StorageLocs {
         self.data.join("settings.json")
     }
 
+    pub fn persistent_state(&self) -> PathBuf {
+        self.data.join("state.json")
+    }
+
     pub fn default_settings(&self) -> PathBuf {
         self.resources
             .join("resources")

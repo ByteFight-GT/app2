@@ -3,6 +3,10 @@ export type Settings = Record<string, {
 	[key: `__${string}`]: any; // for __type, __desc, __placeholder, other meta stuff.
 }>; 
 
+export type PersistentState = {
+	hasSetupBefore: boolean;
+};
+
 export type Team_t = 'a' | 'b';
 
 export type MatchStatus =

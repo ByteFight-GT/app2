@@ -38,6 +38,9 @@ function on<T>(event: string, listener: (data: T) => void): () => void {
 }
 
 export const backend: ElectronAPI = {
+	persistentStateGet: () => invoke('persistent_state_get'),
+	persistentStateSet: (patch) => invoke('persistent_state_set', { patch }),
+
 	settingsGet: () => invoke('settings_get'),
 	settingsSet: (settings) => invoke('settings_set', { settings }),
 	settingsRefresh: () => invoke('settings_refresh'),
