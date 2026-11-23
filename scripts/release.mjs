@@ -88,7 +88,7 @@ function manifest() {
   console.log(`Wrote latest.json with platforms: ${Object.keys(platforms).join(", ")}`);
 
   const upload = files.filter((f) => !f.endsWith(".sig")).concat("latest.json");
-  console.log(`\nNext, from ${staging}:\n  gh release create ${tag} --repo ${repo} --title "${tag}" --notes "..." ${[...upload, ...files.filter((f) => f.endsWith(".sig"))].map((f) => JSON.stringify(f)).join(" ")}`);
+  console.log(`\nNext:\n  gh release create ${tag} --repo ${repo} --title "${tag}" --notes "..." ${[...upload, ...files.filter((f) => f.endsWith(".sig"))].map((f) => path.join(stagingRoot, tag, f)).join(" ")}`);
 }
 
 if (cmd === "collect") collect();
