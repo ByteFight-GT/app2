@@ -133,7 +133,8 @@ export const RunnerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setCurrentlyRunningMatch(startedMatchData);
         setVisualizerState(EMPTY_GAME_PGN);
         setCurrentlyVisualizingMatch(startedMatchData);
-        setAutoAdvance(false); // TEMP: we want autoadvance during games, but useGame currently handles it differently SPECIFICALLY for live games 
+        // live frames follow the newest frame on their own (useVisualizer.applyLiveFrame), so no autoplay
+        setAutoAdvance(false);
 
         toast({
 					toastTitle: "Match started",
@@ -336,8 +337,29 @@ export const RunnerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error("[handleMatchEnd] Failed to write logs for match", updatedMatchData.matchId, error);
     }
 
+    // if the user is watching this match, swap the streamed frames for the
+    // saved replay, which also has the mines and final result. matchesReadGame
+    // finds the file via the saved match, so this needs the write above.
+    const isVisualizingThisMatch = currentlyVisualizingMatch?.matchId === updatedMatchData.matchId;
+    if (isVisualizingThisMatch) {
+      setCurrentlyVisualizingMatch(updatedMatchData);
+    }
+    if (isVisualizingThisMatch && matchWriteRes.success && updatedMatchData.status !== 'terminated') {
+      try {
+        const res = await window.electron.matchesReadGame(updatedMatchData, gameIdent);
+        if (res.success) {
+          setVisualizerState(res.gameData, { keepFrame: true });
+        } else {
+          // e.g. the engine crashed before writing a replay; keep the streamed frames
+          console.warn("[handleMatchEnd] Couldn't load replay for finished match, keeping streamed frames:", res.error);
+        }
+      } catch (error) {
+        console.warn("[handleMatchEnd] Couldn't load replay for finished match, keeping streamed frames:", error);
+      }
+    }
+
     if (matchWriteRes.success) {
-      addMatchToCompletedHistory(updatedMatchData);     
+      addMatchToCompletedHistory(updatedMatchData);
       toast({
         toastTitle: `Match finished!`,
         toastDescription: <p>
@@ -390,10 +412,9 @@ export const RunnerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       )
     }
 
-    setAutoAdvance(false);
     setCurrentlyRunningMatch(null);
 
-  }, [currentlyRunningMatch, toggleLoading, toastError]);
+  }, [currentlyRunningMatch, currentlyVisualizingMatch, setVisualizerState, toggleLoading, toastError]);
 
   const updateRecentBots = React.useCallback((aBot: string, bBot: string) => {
     setRecentBots(prev => ({

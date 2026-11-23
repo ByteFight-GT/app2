@@ -59,9 +59,6 @@ class Board:
         self.revealed_mines: Set[Location] = set()
         self.turn_index: int = 0  # total completed turns, 0..MAX_TURNS_PER_PLAYER * 2
         self.turns_taken: Dict[Player, int] = {"black": 0, "white": 0}
-        # A successful defuse gives that player DEFUSE_BONUS_STONES extra
-        # stones next turn.
-        self.extra_move: Dict[Player, bool] = {"black": False, "white": False}
         self.defuses_left: Dict[Player, int] = {
             "black": GameConstants.STARTING_DEFUSES,
             "white": GameConstants.STARTING_DEFUSES,
@@ -114,7 +111,7 @@ class Board:
         player = player or self.current_player()
         if player == "black" and self.turns_taken["black"] == 0:
             return 1
-        return 2 + GameConstants.DEFUSE_BONUS_STONES if self.extra_move[player] else 2
+        return 2
 
     def is_over(self) -> bool:
         return self.turn_index >= GameConstants.MAX_TURNS_PER_PLAYER * 2
@@ -174,6 +171,8 @@ class Board:
         Apply one full turn (optional defuse attempt, then the placements)
         and end it. The placements go through whether or not the defuse finds
         a mine, and may include the defuse target, which is clear either way.
+        A successful defuse also places a stone at its target, only once if
+        it overlaps a move. All stones are placed before resolving blasts.
         Returns a TurnRecord on success, or None if the turn was illegal (a
         defuse/move target was off-board or already occupied, move targets
         weren't distinct, or a defuse was tried with no attempts left). The
@@ -198,21 +197,22 @@ class Board:
                 self.mines.discard(defuse)
                 self.revealed_mines.add(defuse)
 
-        outcomes, triggered, removed = self._place_and_resolve(player, moves)
+        placements = list(moves)
+        if defuse_success and defuse is not None and defuse not in placements:
+            placements.append(defuse)
+        outcomes, triggered, removed = self._place_and_resolve(player, placements)
         record = TurnRecord(
             signals_data=[(m, o != "placed") for m, o in zip(moves, outcomes)],
             defuse_attempted=defuse is not None,
             defuse_success=defuse_success,
             mines_snapshot=mines_snapshot,
-            moves=list(moves),
+            moves=placements,
             move_outcomes=outcomes,
             triggered_mines=triggered,
             removed_stones=removed,
             revealed_mine=defuse if defuse_success else None,
         )
 
-        # The extra move lasts one turn, so only a successful defuse sets it.
-        self.extra_move[player] = bool(record.defuse_success)
         self.turn_index += 1
         self.turns_taken[player] += 1
         if self.turns_taken[player] % GameConstants.DEFUSE_RECHARGE_TURNS == 0:

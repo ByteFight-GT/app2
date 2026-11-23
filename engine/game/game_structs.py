@@ -2,10 +2,9 @@
 These are the shared types for the Gomoku game, used by both the game engine
 and your bot.
 
-Each turn your bot receives a GameState describing what the bot can see (the
-board, but not the mines that haven't been found yet) and returns an Action
-with an optional defuse and the stones to place. GameState and Action are
-Pydantic models, which reject a malformed Action. A malformed or illegal
+Each turn your bot receives a GameState describing what the bot can see 
+and returns an Action with an optional defuse and the stones to place. 
+GameState and Action reject a malformed Action. A malformed or illegal
 Action forfeits the game. Coordinates are (row, col) with (0, 0) in the
 upper-left corner of the board, and board cells are 0 (empty), 1 (white) or
 2 (black). Rule values such as board size, mine count, detector noise and
@@ -33,56 +32,25 @@ Row = Annotated[list[Cell], Field(min_length=GameConstants.BOARD_SIZE, max_lengt
 Grid = Annotated[list[Row], Field(min_length=GameConstants.BOARD_SIZE, max_length=GameConstants.BOARD_SIZE)]
 
 
-def _MAX_STONES() -> int:
-    """
-    Returns the most stones any turn can place: 2 normally, plus
-    DEFUSE_BONUS_STONES on the turn after a successful defuse. With the
-    default rules that is 3 (2 + 1). An Action with more moves than this is
-    rejected straight away. This is only an upper limit, as each turn your
-    bot must place exactly GameState.moves_required stones. With the default
-    rules that is 1 on black's first turn, 3 on the turn after a successful
-    defuse, and 2 otherwise. The limit is recalculated each time an Action
-    is checked, so it stays correct if DEFUSE_BONUS_STONES in
-    game_constants.py is changed.
-
-    Returns:
-        2 + DEFUSE_BONUS_STONES.
-    """
-    return 2 + GameConstants.DEFUSE_BONUS_STONES
-
-
 def opponent_of(player: Player) -> Player:
-    """
-    Returns the opponent of the given player. For example, opponent_of("black")
-    returns "white". For the current turn, GameState.opponent already holds the opponent's colour. The function is useful when your bot simulates future turns and
-    needs to switch sides.
-
-    Args:
-        player: "black" or "white".
-
-    Returns:
-        The other player: "white" for "black", and "black" for "white".
-    """
     return "white" if player == "black" else "black"
 
 
 class SignalReading(BaseModel):
     """
     This is the detector reading for one of the stones you placed on your
-    previous turn. GameState.last_signals holds one of these per stone, so
-    there could be 1 to 3 of them.
+    previous turn. GameState.last_signals holds one per chosen move, so
+    there could be 1 or 2 of them. A stone placed only by a successful
+    defuse does not add a reading.
 
     The reading counts the hidden mines in the 3x3 square around the stone
-    you placed, using the mines as they were at the start of that turn,
+    you placed, using the mines as they were at the start of that turn, 
     before any defuse or stones were placed: "low" means 0 mines, "medium"
     1, and "high" 2 or more. Readings are noisy. Each reading is reported
     correctly 95% of the time with the default rules (see NOISE_MATRIX in
     game_constants.py). The other 5% of the time it reports a different
-    level, usually the neighbouring one in the order low, medium, high: a
-    true low can only read higher, a true high only lower, and a true
-    medium either way. The exception is a 1% chance of a true low reading
-    high, or a true high reading low. "none" means that stone did not
-    survive the turn, either because it landed on a mine or because a blast
+    level. "none" means that stone did not survive the turn, 
+    either because it landed on a mine or because a blast
     from another stone you placed that turn removed it. "none" is never
     noisy.
 
@@ -117,9 +85,7 @@ class StoneCounts(BaseModel):
 class GameState(BaseModel):
     """
     Everything your bot can see at the start of its turn. The engine passes
-    it to your bot's play(obs) function each turn. The hidden mines are not
-    included, apart from the ones that have been defused and revealed
-    (revealed_mines).
+    it to your bot's play(obs) function each turn.
 
     This is the GameState that you get. This has a lot of helper functions.
 
@@ -150,10 +116,9 @@ class GameState(BaseModel):
             Each player gets MAX_TURNS_PER_PLAYER turns (50 by default).
         opponent_turns_remaining: How many turns your opponent has left.
         moves_required: Exactly how many stones you must place this turn:
-            1 on black's first turn, 3 on the turn after a successful
-            defuse, and 2 otherwise. Placing any other number forfeits.
+            1 on black's first turn and 2 otherwise. Placing any other number forfeits.
         opponent_moves_required: How many stones your opponent must place
-            on their next turn (3 if their last defuse succeeded).
+            on their next turn (1 on black's first turn and 2 otherwise).
         defuses_remaining: Your defuse attempts left. You start with 1 and
             gain 1 after every 3 of your own turns. Unused attempts carry
             over, with no limit on how many you can save up.
@@ -181,7 +146,7 @@ class GameState(BaseModel):
     opponent_turns_remaining: int
     # Stones still to place this turn.
     moves_required: int
-    # Stones the opponent places next turn (more after their successful defuse).
+    # Stones the opponent must place next turn.
     opponent_moves_required: int
     # Defuse attempts left: 1 at the start, plus one after
     # every 3 of that player's turns.
@@ -328,24 +293,8 @@ class GameState(BaseModel):
     @field_validator("last_signals")
     @classmethod
     def _cap_signals(cls, value):
-        """
-        Checks that GameState.last_signals has no more readings than one
-        turn can place stones (3 with the default rules), since there is one
-        reading per stone. Pydantic runs this automatically whenever a
-        GameState is created; your bot never needs to call it.
-
-        Args:
-            value: The GameState.last_signals list being checked.
-
-        Returns:
-            The same list, unchanged, if it passes.
-
-        Raises:
-            ValueError: If there are more readings than _MAX_STONES()
-                allows.
-        """
-        if len(value) > _MAX_STONES():
-            raise ValueError(f"at most {_MAX_STONES()} signal readings")
+        if len(value) > 2:
+            raise ValueError("at most 2 signal readings")
         return value
 
 
@@ -361,11 +310,14 @@ class Action(BaseModel):
             skip. It must be on the board and on an empty cell, and you need at
             least 1 attempt left (GameState.defuses_remaining). It uses
             up 1 attempt whether or not there was a mine there, and your
-            stones are placed either way.
+            stones are placed either way. Success places your stone at
+            the defuse target immediately.
         moves: (row, col) of each stone to place. There must be exactly
             GameState.moves_required of them, each on a different, empty
             cell on the board. One of them may be the defuse cell, which
-            is safe after the defuse whatever the result.
+            is safe after the defuse whatever the result. If that defuse
+            succeeds, the overlapping stone is placed only once. All stones
+            are placed before resolving any mines triggered by the moves.
 
     A badly formatted or illegal Action forfeits the game.
     """
@@ -376,24 +328,6 @@ class Action(BaseModel):
     @field_validator("moves")
     @classmethod
     def _cap_moves(cls, value):
-        """
-        Check that Action.moves has no more stones than one turn can place
-        (3 with the default rules). Pydantic runs this automatically
-        whenever an Action is created, including inside your bot, so
-        building an Action with too many moves raises an error straight
-        away; your bot never needs to call it. This is only an upper limit:
-        the engine separately checks that you placed exactly
-        GameState.moves_required stones.
-
-        Args:
-            value: The Action.moves list being checked.
-
-        Returns:
-            The same list, unchanged, if it passes.
-
-        Raises:
-            ValueError: If there are more moves than _MAX_STONES() allows.
-        """
-        if len(value) > _MAX_STONES():
-            raise ValueError(f"at most {_MAX_STONES()} moves")
+        if len(value) > 2:
+            raise ValueError("at most 2 moves")
         return value

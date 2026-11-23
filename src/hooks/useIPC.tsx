@@ -7,12 +7,28 @@ import type { GameResult } from '../../common/types';
 import { useToast } from '@/hooks/useToast';
 import { useRunner } from '@/hooks/useRunner';
 
-import { GamePGN, useVisualizer } from '@/gamerenderer/competitions/cs6601_fa2026';
+import { GamePGN, GamePGNFrame, useVisualizer } from '@/gamerenderer/competitions/cs6601_fa2026';
+
+/** `update` message streamed by the engine (see engine/local_server.py). */
+type EngineFrameUpdate = {
+  type: 'update';
+  index: number;
+  frame: Partial<GamePGNFrame>;
+};
+
+function isFrameUpdate(data: unknown): data is EngineFrameUpdate {
+  if (typeof data !== 'object' || data === null) return false;
+  const msg = data as Record<string, unknown>;
+  return msg.type === 'update'
+    && typeof msg.index === 'number'
+    && typeof msg.frame === 'object' && msg.frame !== null;
+}
 
 
 /** Handles state/logic for IPC communication with Electron. */
 export function useIPC() {
   const { toastError } = useToast();
+  const { applyLiveFrame } = useVisualizer();
 
   const {
     currentlyRunningMatch,
@@ -41,12 +57,15 @@ export function useIPC() {
       stdOutChunksRef.current.push(chunk);
     },
 
-    handleSystemData(data: any) {
-      /* temp - no livestreaming for 6601 yet
-      if (data.type === 'update' && currentlyVisualizingMatchRef.current?.matchId === currentlyRunningMatchRef.current?.matchId) {
-        updateGamePGN(data);
+    handleSystemData(data: unknown) {
+      // other message types (game_complete, terminated, unparsed) are handled
+      // via process-closed, so only frames matter here
+      if (!isFrameUpdate(data)) return;
+      const running = currentlyRunningMatchRef.current;
+      // only draw if the user is watching the running match, not a replay
+      if (running && currentlyVisualizingMatchRef.current?.matchId === running.matchId) {
+        applyLiveFrame(data.index, data.frame);
       }
-      */
     },
 
     handleProcessError(error: unknown) {
@@ -68,7 +87,7 @@ export function useIPC() {
     handleSocketError(error: unknown) {
       recordMatchError(`Socket error: ${getErrorMessage(error)}`);
     },
-  }), [recordMatchError, toastError]);
+  }), [recordMatchError, toastError, applyLiveFrame]);
 
   React.useEffect(() => {
     console.log("[useIPC] >>> registering ipc handlers");

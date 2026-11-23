@@ -14,10 +14,9 @@ class GameConstants:
 
     # Mines
     NUM_MINES: int = 10
-    # Explosion is a 5x5 square centered on the triggered mine (offsets in
-    # [-BLAST_RADIUS, BLAST_RADIUS] on both axes). A bigger blast makes each
-    # detonation cost more, so reading the detector pays off.
-    BLAST_RADIUS: int = 2
+    # Explosion is a 3x3 square centered on the triggered mine (offsets in
+    # [-BLAST_RADIUS, BLAST_RADIUS] on both axes).
+    BLAST_RADIUS: int = 1
 
     # Detector: mines are counted within Euclidean distance <= sqrt(2) of the
     # placed stone, the 3x3 square around it (see Board._detector_cells).
@@ -39,14 +38,9 @@ class GameConstants:
         "high": {"low": 1, "medium": 4, "high": 95},
     }
 
-    # Extra stones a successful defuse earns on that player's next turn. At 2
-    # even a reckless defuser at 40% success comes out ahead, which flattens
-    # skill; at 1 only a well calibrated read pays.
-    DEFUSE_BONUS_STONES: int = 1
-
     # Defuse attempts each player starts with, and how many of their own
-    # turns earn them one more. A failed defuse costs only the attempt: the
-    # turn's stones are still placed.
+    # turns earn them one more. Success places a stone at the defuse target;
+    # failure costs only the attempt. The turn's moves are placed either way.
     STARTING_DEFUSES: int = 1
     DEFUSE_RECHARGE_TURNS: int = 3
 

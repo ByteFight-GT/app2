@@ -78,7 +78,7 @@ class GamePGN(BaseModel):
     move_outcomes: List[List[MoveResolution]] = Field(default_factory=list)
     defuse_attempts: List[Optional[MapLoc]] = Field(default_factory=list)
     defuse_results: List[DefuseOutcome] = Field(default_factory=list)
-    # Always empty since defuses no longer place stones. Kept for the renderer.
+    # Always empty: successful defuse stones are included in moves instead.
     random_stones: List[List[MapLoc]] = Field(default_factory=list)
     triggered_mines: List[List[MineTrigger]] = Field(default_factory=list)
     removed_stones: List[List[RemovedStone]] = Field(default_factory=list)
