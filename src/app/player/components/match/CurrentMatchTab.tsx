@@ -11,7 +11,6 @@ import { ButtonGroup } from '@/components/ui/button-group';
 
 const showMinesOptions: Array<{ label: string; value: ShowMinesSetting }> = [
   { label: 'Hide', value: 'none' },
-  { label: 'Revealed', value: 'revealed' },
   { label: 'All', value: 'all' },
 ];
 
