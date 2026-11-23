@@ -1,6 +1,6 @@
 {
   "name": "bytefightapp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Bytefight desktop client",
   "type": "module",
@@ -8,6 +8,8 @@
     "dev": "tauri dev",
     "build": "echo 'use buildwsl or buildwin'",
     "buildwsl": "~/scripts/bytefightapp_build",
+    "releasewsl": "bash scripts/local/wslrelease.sh",
+    "releasewin": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/winrelease.ps1",
     "buildwin": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/winbuild.ps1",
     "buildraw": "tauri build",
     "tauri": "tauri",
