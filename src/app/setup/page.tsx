@@ -218,14 +218,23 @@ const SetupPage = () => {
 			placeholder="Default: $/bots"
 			showExplorerOptions>
 				<p className="text-muted-foreground mb-3">
-					Where your bot folders are stored.
+					Where your bots are stored.
 					<br /><br />
 					This should not be the folder for just a single bot, but instead
-					a parent folder containing bot folders.
+					a parent folder containing your bots. Each bot must satisfy either
+					of the following requirements:
+					<ul>
+						<li>- be a single <code>.py</code> file directly inside the bots directory, defining a
+						class that subclasses <code>PlayerController</code> (this is the entrypoint)</li>
+						<li>- or be a folder containing an entrypoint file like the above, and any other helper files you want</li>
+					</ul>
+					<br />
+					Note single-file bots can't import any other files next to them, 
+					so if you need helper modules or other files, use a folder bot.
 					<br /><br />
 					It is recommended you point this to the folder where you are
-					developing to avoid having to import them each time you have
-					a new version.
+					actively developing to avoid having to import them each time
+					you have a new version.
 				</p>
 			</SettingStep>
 

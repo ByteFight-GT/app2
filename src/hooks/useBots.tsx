@@ -9,7 +9,8 @@ import { useSettings } from './useSettings';
 export type UseBotsValue = {
   bots: string[];
   fetchBotList: () => void;
-  handleImportBots: () => void;
+  /** opens a picker for bot folders, or for single-file (.py) bots */
+  handleImportBots: (kind: 'folders' | 'files') => void;
 };
 
 const BotsContext = React.createContext<UseBotsValue | undefined>(undefined);
@@ -46,11 +47,12 @@ export const BotsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [loadings, toggleLoading, toastError]);
 
-  const handleImportBots = React.useCallback(() => {
-    window.electron.botsImport()
+  const handleImportBots = React.useCallback((kind: 'folders' | 'files') => {
+    (kind === 'files' ? window.electron.botsImportFiles() : window.electron.botsImport())
     .then((res) => {
       if (res.success) {
-        setBots(prev => [...prev, ...res.imported]);
+        // re-importing an existing bot overwrites it, so dedupe
+        setBots(prev => [...new Set([...prev, ...res.imported])].sort());
         toast({
           toastTitle: "Bots Imported",
           toastDescription: 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib
+import importlib.machinery
+import importlib.util
 import inspect
 import os
 import queue
@@ -21,9 +23,10 @@ Parent: SubprocessPlayerHandle sends one JSON GameState per line and reads one
 JSON Action per line. Replies are read on a thread because select() only works
 on sockets on Windows.
 
-Child: `python player_process.py <bot_dir>` imports the top-level .py files in
-<bot_dir> that mention PlayerController, and serves the one PlayerController
-subclass they define over stdio. The file can have any name. Bot prints go to
+Child: `python player_process.py <bot_path>` loads the bot and serves the one
+PlayerController subclass it defines over stdio. A bot is either a folder
+(its top-level .py files that mention PlayerController are imported; they can
+have any name) or a single .py file that mentions it. Bot prints go to
 stderr, which the parent forwards to the client console tagged with the
 player's colour.
 """
@@ -32,38 +35,42 @@ _HERE = Path(__file__).resolve().parent
 CONTROLLER_MARKER = "PlayerController"
 
 
-def controller_files(bot_dir: Path) -> List[Path]:
-    """Top-level .py files in bot_dir that mention PlayerController.
+def _mentions_controller(path: Path) -> bool:
+    try:
+        return CONTROLLER_MARKER in path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
 
-    A text check, so the server can validate a bot folder without importing it
+
+def controller_files(bot_path: Path) -> List[Path]:
+    """The .py files of a bot that mention PlayerController.
+
+    For a folder bot, its top-level .py files; for a single-file bot, the file
+    itself. A text check, so the server can validate a bot without importing it
     and the child only imports files that might hold the controller.
     """
-    files = []
-    for path in sorted(bot_dir.glob("*.py")):
-        try:
-            if CONTROLLER_MARKER in path.read_text(encoding="utf-8", errors="replace"):
-                files.append(path)
-        except OSError:
-            continue
-    return files
+    if bot_path.is_file():
+        return [bot_path] if bot_path.suffix == ".py" and _mentions_controller(bot_path) else []
+    return [path for path in sorted(bot_path.glob("*.py")) if _mentions_controller(path)]
 
 
 class SubprocessPlayerHandle(PlayerHandle):
     """A PlayerHandle backed by a child process running one bot."""
 
-    def __init__(self, bot_dir: Path, label: str, action_type):
+    def __init__(self, bot_path: Path, label: str, action_type):
         self._label = label
         self._action_type = action_type
         env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
         self._proc = subprocess.Popen(
-            [sys.executable, str(_HERE / "player_process.py"), str(bot_dir)],
+            [sys.executable, str(_HERE / "player_process.py"), str(bot_path)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8",
             bufsize=1,
-            cwd=str(bot_dir),
+            # a single-file bot has no folder of its own, so it runs in the bots folder
+            cwd=str(bot_path if bot_path.is_dir() else bot_path.parent),
             env=env,
         )
         self._replies: "queue.Queue[Optional[str]]" = queue.Queue()
@@ -125,21 +132,51 @@ def _find_controller(modules) -> type:
     return chosen[0]
 
 
-def _serve(bot_dir: Path) -> None:
+def _exec_module(name: str, spec) -> object:
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module  # before exec, so dataclasses/typing can find it
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_bot(bot_path: Path) -> list:
+    """Imports the bot's controller files and returns their modules.
+
+    The bots folder is never put on sys.path: a bot file there named e.g.
+    random.py would otherwise shadow the stdlib for every other bot.
+    """
+    files = controller_files(bot_path)
+    if not files:
+        raise SystemExit(f"no .py file mentioning {CONTROLLER_MARKER} found at {bot_path}")
+
+    if bot_path.is_file():
+        # fixed prefix so a file named e.g. random.py doesn't register itself as `random`
+        name = f"bytefight_bot_{bot_path.stem}"
+        return [_exec_module(name, importlib.util.spec_from_file_location(name, bot_path))]
+
+    # Folder bots are loaded as a package named after the folder, like the old
+    # engine did, so relative imports work. The folder itself goes on sys.path
+    # for files imported by name. The engine directory stays first, so the copy
+    # of game/ that ships in the student zip can't shadow the engine's own.
+    name = bot_path.name
+    sys.path.insert(1, str(bot_path))
+    init = bot_path / "__init__.py"
+    if init.exists():
+        spec = importlib.util.spec_from_file_location(name, init, submodule_search_locations=[str(bot_path)])
+        package = _exec_module(name, spec)
+    else:
+        spec = importlib.machinery.ModuleSpec(name, None, is_package=True)
+        spec.submodule_search_locations = [str(bot_path)]
+        package = importlib.util.module_from_spec(spec)
+        sys.modules[name] = package
+
+    return [package if path == init else importlib.import_module(f"{name}.{path.stem}") for path in files]
+
+
+def _serve(bot_path: Path) -> None:
     # Done before the import so import time prints also go to stderr.
     protocol_out = isolate_protocol_stream()
-
-    # Bots are imported as packages like the old engine did, so relative imports
-    # work. The bot directory is also added for files imported by name. The
-    # engine directory stays first, so the copy of game/ that ships in the
-    # student zip can't shadow the engine's own.
-    sys.path[1:1] = [str(bot_dir.parent), str(bot_dir)]
-    modules = [
-        importlib.import_module(bot_dir.name if path.stem == "__init__" else f"{bot_dir.name}.{path.stem}")
-        for path in controller_files(bot_dir)
-    ]
-
-    run_agent(_find_controller(modules)(), stdout=protocol_out)
+    run_agent(_find_controller(_load_bot(bot_path))(), stdout=protocol_out)
 
 
 if __name__ == "__main__":

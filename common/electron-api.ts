@@ -57,6 +57,7 @@ export type ElectronAPI = {
   botsList: () => Promise<IPCResult<{ bots: string[] }>>;
   botsCopyExample: () => Promise<IPCResult<{ alreadyExisted: boolean }>>;
   botsImport: () => Promise<IPCResult<{ imported: string[]; invalid: string[] }>>;
+  botsImportFiles: () => Promise<IPCResult<{ imported: string[]; invalid: string[] }>>;
 
   matchesReadMany: (start: number, count: number) => Promise<IPCResult<{
     matches: MatchMetadata<GamePGN>[];

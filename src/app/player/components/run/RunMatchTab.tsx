@@ -4,7 +4,7 @@ import { SidebarItem } from '@/components/SidebarItem';
 import React from 'react';
 import { BotSelector } from './BotSelector';
 import { Button } from '@/components';
-import { ArrowLeftRightIcon, ClockIcon, FolderIcon, ImportIcon, PlayIcon, RefreshCwIcon } from 'lucide-react';
+import { ArrowLeftRightIcon, ClockIcon, FileCodeIcon, FolderIcon, ImportIcon, PlayIcon, RefreshCwIcon } from 'lucide-react';
 //import { useMaps } from '@/hooks/useMaps';
 import { useLoadings } from '@/hooks/useLoadings';
 import { useBots } from '@/hooks/useBots';
@@ -164,9 +164,13 @@ export const RunMatchTab = ({ switchTab }: MatchPlayerTabProps) => {
       </SidebarItem>*/}
 
       <div className='flex flex-col gap-2 w-full'>
-        <Button variant="secondary" loading={loadings.fetchBotList} onClick={handleImportBots}>
+        <Button variant="secondary" loading={loadings.fetchBotList} onClick={() => handleImportBots('folders')}>
           <FolderIcon className='inline align-sub text-primary' />
-          Import Bots
+          Import Bot Folders
+        </Button>
+        <Button variant="secondary" loading={loadings.fetchBotList} onClick={() => handleImportBots('files')}>
+          <FileCodeIcon className='inline align-sub text-primary' />
+          Import Bot Files (.py)
         </Button>
         <Button variant="secondary" loading={loadings.fetchBotList} onClick={handleRefreshBots}>
           <RefreshCwIcon className='inline align-sub text-primary' />

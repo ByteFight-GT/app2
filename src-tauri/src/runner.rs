@@ -264,15 +264,15 @@ fn prepare(state: &AppState, match_data: &Value) -> Result<Prepared, String> {
     let team_b = require_safe_segment(required_str(match_data, "teamB")?, "bot name")?;
     let team_a_dir = bots_dir.join(team_a);
     let team_b_dir = bots_dir.join(team_b);
-    if !team_a_dir.is_dir() {
+    if !crate::bots::validate_bot(&team_a_dir) {
         return Err(format!(
-            "Black team bot directory not found or invalid: {}",
+            "Black team bot not found or invalid (needs a .py file defining a PlayerController): {}",
             display(&team_a_dir)
         ));
     }
-    if !team_b_dir.is_dir() {
+    if !crate::bots::validate_bot(&team_b_dir) {
         return Err(format!(
-            "White team bot directory not found or invalid: {}",
+            "White team bot not found or invalid (needs a .py file defining a PlayerController): {}",
             display(&team_b_dir)
         ));
     }

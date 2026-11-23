@@ -84,6 +84,7 @@ fn main() {
             bots::bots_list,
             bots::bots_copy_example,
             bots::bots_import,
+            bots::bots_import_files,
             matches::matches_reindex,
             matches::matches_readmany,
             matches::matches_write,

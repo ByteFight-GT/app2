@@ -114,9 +114,11 @@ def accept_client(port: int) -> socket.socket:
     return conn
 
 
-def check_bot_dir(bot_dir: Path, name: str) -> None:
-    if not controller_files(bot_dir):
-        raise SystemExit(f"Error: {name} directory {bot_dir} has no .py file defining a PlayerController.")
+def check_bot_dir(bot_path: Path, name: str) -> None:
+    if not controller_files(bot_path):
+        if bot_path.is_file():
+            raise SystemExit(f"Error: {name} file {bot_path} doesn't define a PlayerController.")
+        raise SystemExit(f"Error: {name} folder {bot_path} has no .py file defining a PlayerController.")
 
 
 def play_match(args: argparse.Namespace, stream: ClientStream, handles: List[SubprocessPlayerHandle]) -> None:
@@ -146,8 +148,8 @@ def play_match(args: argparse.Namespace, stream: ClientStream, handles: List[Sub
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a Connect-6 Mines match for the ByteFight client")
-    parser.add_argument("--a_dir", "-a", type=Path, required=True, help="Player A's (black's) bot directory")
-    parser.add_argument("--b_dir", "-b", type=Path, required=True, help="Player B's (white's) bot directory")
+    parser.add_argument("--a_dir", "-a", type=Path, required=True, help="Player A's (black's) bot folder or .py file")
+    parser.add_argument("--b_dir", "-b", type=Path, required=True, help="Player B's (white's) bot folder or .py file")
     parser.add_argument("--output_dir", "-o", type=Path, required=True, help="File to write the GamePGN replay to")
     parser.add_argument("--output_port", "-p", type=int, required=True, help="Port to stream the match on")
     args = parser.parse_args()

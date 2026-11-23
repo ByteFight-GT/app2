@@ -1,4 +1,8 @@
-//! Bots: folders inside "Bots Directory" containing `__init__.py` and `controller.py`.
+//! Bots live in "Bots Directory" and come in two kinds:
+//! - folder bots: a folder whose top-level `.py` files include one mentioning `PlayerController`
+//! - single-file bots: a top-level `.py` file mentioning `PlayerController` (the name keeps `.py`)
+//!
+//! Keep this check in sync with `controller_files` in engine/player_process.py.
 
 use std::fs;
 use std::io;
@@ -45,8 +49,27 @@ pub async fn bots_copy_example(state: State<'_, AppState>) -> CmdResult {
     reply(copy_example_bot(&state).map(|copied| json!({ "alreadyExisted": !copied })))
 }
 
+const CONTROLLER_MARKER: &[u8] = b"PlayerController";
+
+/// A `.py` file whose text mentions `PlayerController` (same text check as the engine).
+fn is_controller_file(path: &Path) -> bool {
+    path.is_file()
+        && path.extension().is_some_and(|e| e == "py")
+        && fs::read(path).is_ok_and(|bytes| {
+            bytes.windows(CONTROLLER_MARKER.len()).any(|w| w == CONTROLLER_MARKER)
+        })
+}
+
+/// Whether `bot_path` is a runnable bot: a `.py` controller file, or a folder
+/// with at least one top-level controller file.
 pub fn validate_bot(bot_path: &Path) -> bool {
-    bot_path.join("__init__.py").exists() && bot_path.join("agent.py").exists()
+    if bot_path.is_dir() {
+        fs::read_dir(bot_path).is_ok_and(|entries| {
+            entries.filter_map(Result::ok).any(|e| is_controller_file(&e.path()))
+        })
+    } else {
+        is_controller_file(bot_path)
+    }
 }
 
 #[tauri::command]
@@ -62,7 +85,7 @@ pub async fn bots_list(state: State<'_, AppState>) -> CmdResult {
                     _ => format!("{}: {e}", display(&bots_dir)),
                 })?
                 .filter_map(Result::ok)
-                .filter(|e| e.path().is_dir() && validate_bot(&e.path()))
+                .filter(|e| validate_bot(&e.path()))
                 .filter_map(|e| e.file_name().into_string().ok())
                 .collect();
             bots.sort();
@@ -72,19 +95,8 @@ pub async fn bots_list(state: State<'_, AppState>) -> CmdResult {
     )
 }
 
-#[tauri::command]
-pub async fn bots_import(app: AppHandle, state: State<'_, AppState>) -> CmdResult {
-    let fallback = json!({ "imported": [], "invalid": [] });
-    let bots_dir = match state.configured_dir("Bots Directory") {
-        Ok(d) => d,
-        Err(e) => return reply_with_fallback(Err(e), fallback),
-    };
-
-    let picked = dialogs::pick_folders(&app, "Import Bots").await;
-    if picked.is_empty() {
-        return reply_with_fallback(Err("Import canceled by user".into()), fallback);
-    }
-
+/// Copies picked bots (folders or `.py` files) into the bots dir, skipping invalid ones.
+fn import_bots(bots_dir: &Path, picked: Vec<std::path::PathBuf>) -> Result<serde_json::Value, String> {
     let mut imported = Vec::new();
     let mut invalid = Vec::new();
     for src in picked {
@@ -100,10 +112,78 @@ pub async fn bots_import(app: AppHandle, state: State<'_, AppState>) -> CmdResul
             (src.canonicalize(), dst.canonicalize()),
             (Ok(a), Ok(b)) if a == b
         );
-        if !same && let Err(e) = copy_dir_recursive(&src, &dst) {
-            return reply_with_fallback(Err(format!("Failed to import {name}: {e}")), fallback);
+        if !same {
+            let copied = if src.is_dir() {
+                copy_dir_recursive(&src, &dst)
+            } else {
+                fs::copy(&src, &dst).map(|_| ())
+            };
+            copied.map_err(|e| format!("Failed to import {name}: {e}"))?;
         }
         imported.push(name);
     }
-    reply(Ok(json!({ "imported": imported, "invalid": invalid })))
+    Ok(json!({ "imported": imported, "invalid": invalid }))
+}
+
+#[tauri::command]
+pub async fn bots_import(app: AppHandle, state: State<'_, AppState>) -> CmdResult {
+    let fallback = json!({ "imported": [], "invalid": [] });
+    let bots_dir = match state.configured_dir("Bots Directory") {
+        Ok(d) => d,
+        Err(e) => return reply_with_fallback(Err(e), fallback),
+    };
+
+    let picked = dialogs::pick_folders(&app, "Import Bot Folders").await;
+    if picked.is_empty() {
+        return reply_with_fallback(Err("Import canceled by user".into()), fallback);
+    }
+    reply_with_fallback(import_bots(&bots_dir, picked), fallback)
+}
+
+#[tauri::command]
+pub async fn bots_import_files(app: AppHandle, state: State<'_, AppState>) -> CmdResult {
+    let fallback = json!({ "imported": [], "invalid": [] });
+    let bots_dir = match state.configured_dir("Bots Directory") {
+        Ok(d) => d,
+        Err(e) => return reply_with_fallback(Err(e), fallback),
+    };
+
+    let picked = dialogs::pick_files(&app, "Import Bot Files", "Python", &["py"]).await;
+    if picked.is_empty() {
+        return reply_with_fallback(Err("Import canceled by user".into()), fallback);
+    }
+    reply_with_fallback(import_bots(&bots_dir, picked), fallback)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_bot;
+    use std::fs;
+
+    #[test]
+    fn validates_folder_and_file_bots() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let controller = "from bytefight_core import PlayerController\n";
+
+        // folder bot: any top-level .py mentioning the marker counts, no __init__ needed
+        fs::create_dir(root.join("folder")).unwrap();
+        fs::write(root.join("folder/bot.py"), controller).unwrap();
+        assert!(validate_bot(&root.join("folder")));
+
+        // marker only in a nested file doesn't count
+        fs::create_dir_all(root.join("nested/sub")).unwrap();
+        fs::write(root.join("nested/sub/bot.py"), controller).unwrap();
+        assert!(!validate_bot(&root.join("nested")));
+
+        // single-file bots
+        fs::write(root.join("single.py"), controller).unwrap();
+        assert!(validate_bot(&root.join("single.py")));
+        fs::write(root.join("plain.py"), "print('hi')\n").unwrap();
+        assert!(!validate_bot(&root.join("plain.py")));
+        fs::write(root.join("notpy.txt"), controller).unwrap();
+        assert!(!validate_bot(&root.join("notpy.txt")));
+
+        assert!(!validate_bot(&root.join("missing.py")));
+    }
 }

@@ -61,6 +61,7 @@ export const backend: ElectronAPI = {
 	botsList: () => invoke('bots_list'),
 	botsCopyExample: () => invoke('bots_copy_example'),
 	botsImport: () => invoke('bots_import'),
+	botsImportFiles: () => invoke('bots_import_files'),
 
 	matchesReindex: () => invoke('matches_reindex'),
 	matchesReadMany: (start, count) => invoke('matches_readmany', { start, limit: count }),
