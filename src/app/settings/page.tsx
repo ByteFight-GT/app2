@@ -132,7 +132,7 @@ export default function SettingsPage() {
 					))
 				: <p className='text-center text-muted-foreground'>Loading config...</p>}
 				<hr className='my-4' />
-				<SettingsItem name="App updates" unsaved={false} desc={`Current version: v${process.env.NEXT_PUBLIC_APP_VERSION}`}>
+				<SettingsItem name="App update" unsaved={false} desc={`Current version: v${process.env.NEXT_PUBLIC_APP_VERSION}`}>
 					<Button variant="secondary" onClick={() => checkForUpdates(true)}>Check for updates</Button>
 				</SettingsItem>
 			</div>
