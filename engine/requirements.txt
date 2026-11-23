@@ -1,8 +1,6 @@
 numpy
 numba
-pytorch
+torch
 scikit-learn
-bytefight-core @ git+https://github.com/ByteFight-GT/engine.git@02845bcd79fe39f3e7b079b25a1f775846c481ed#subdirectory=packages/core
-bytefight-runner @ git+https://github.com/ByteFight-GT/engine.git@02845bcd79fe39f3e7b079b25a1f775846c481ed#subdirectory=packages/runner
 pydantic>=2.0
 python-dotenv>=1.0
