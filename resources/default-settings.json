@@ -32,7 +32,6 @@
 		"__placeholder": "$/logs",
 		"__desc": "Directory for saving and loading stdio logs of game runs. Prefix with \"$/\" to start relative to the default bytefight client userdata directory.",
 		"__showExplorerOptions": true,
-		"__addSeparatorBelow": true,
 		"value": "$/logs"
 	}
 }

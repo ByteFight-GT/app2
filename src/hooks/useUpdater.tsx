@@ -78,8 +78,8 @@ export function useUpdater() {
         return;
       }
       toast({
-        toastTitle: `Update available: v${update.version}`,
-        toastDescription: "Install it now, or later from Settings. The app restarts after installing.",
+        toastTitle: `Client update available: v${update.version}`,
+        toastDescription: "You can also install later in settings. The app will auto-restart after installing.",
         duration: Infinity,
         action: (
           <ToastAction altText="Install update and restart" onClick={() => install(update)}>
