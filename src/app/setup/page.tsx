@@ -146,7 +146,7 @@ const InstallDepsStep = () => {
 			</p>
 			{requirements && (
 				<pre className={`p-3 max-h-80 overflow-auto text-xs whitespace-pre-wrap border border-border bg-secondary`}>
-					{requirements}
+					{requirements.join('\n')}
 				</pre>
 			)}
 			{requirementsError && (
