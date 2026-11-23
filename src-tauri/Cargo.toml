@@ -1,6 +1,6 @@
 [package]
 name = "bytefightapp"
-version = "1.0.2"
+version = "1.0.3"
 description = "Bytefight desktop client"
 authors = ["ByteFight-GT"]
 edition = "2024"
