@@ -29,6 +29,9 @@ export type ElectronAPI = {
   persistentStateGet: () => Promise<PersistentState>;
   persistentStateSet: (patch: Partial<PersistentState>) => Promise<IPCResult<{ state: PersistentState }>>;
 
+  autosetupGetRequirements: () => Promise<IPCResult<{ requirements: string[] }>>;
+  autosetupInstallRequirements: () => Promise<IPCResult<{ stdout: string; stderr: string }>>;
+
   settingsGet: () => Promise<Settings | null>;
   settingsSet: (settings: Settings) => Promise<IPCResult<{ settings: Settings }>>;
   settingsChooseDir: (appRelativePath?: string) => Promise<{

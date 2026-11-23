@@ -15,6 +15,7 @@ export type GameConfig = {
 		/** game ident used for each match when maps are disabled */
 		singletonName: string;
 	};
+	overviewPage: string; // link
 };
 
 export const gameConfig: GameConfig = rawGameConfig;

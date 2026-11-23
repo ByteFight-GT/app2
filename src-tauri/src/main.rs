@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod persistent_state;
+mod autosetup;
 mod bots;
 mod dialogs;
 mod engine;
@@ -64,6 +65,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             persistent_state::persistent_state_get,
             persistent_state::persistent_state_set,
+            autosetup::autosetup_get_requirements,
+            autosetup::autosetup_install_requirements,
             settings::settings_refresh,
             settings::settings_get,
             settings::settings_set,

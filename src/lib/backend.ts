@@ -41,6 +41,9 @@ export const backend: ElectronAPI = {
 	persistentStateGet: () => invoke('persistent_state_get'),
 	persistentStateSet: (patch) => invoke('persistent_state_set', { patch }),
 
+	autosetupGetRequirements: () => invoke('autosetup_get_requirements'),
+	autosetupInstallRequirements: () => invoke('autosetup_install_requirements'),
+
 	settingsGet: () => invoke('settings_get'),
 	settingsSet: (settings) => invoke('settings_set', { settings }),
 	settingsRefresh: () => invoke('settings_refresh'),

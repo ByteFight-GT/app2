@@ -4,5 +4,6 @@
     "enabled": false,
     "builderEnabled": false,
     "singletonName": "0"
-  }
+  },
+  "overviewPage": "https://bytefight.org/compete/cs6601_fa2026/overview"
 }
