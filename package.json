@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
-    "build": "tauri build",
+    "build": "~/scripts/bytefightapp_build",
+    "buildraw": "tauri build",
     "tauri": "tauri",
     "next:dev": "next dev",
     "next:build": "next build",
