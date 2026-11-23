@@ -8,7 +8,7 @@
     "dev": "tauri dev",
     "build": "echo 'use buildwsl or buildwin'",
     "buildwsl": "~/scripts/bytefightapp_build",
-    "buildwin": "powershell -NoProfile -ExecutionPolicy Bypass -File ../app2_build.ps1",
+    "buildwin": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/winbuild.ps1",
     "buildraw": "tauri build",
     "tauri": "tauri",
     "next:dev": "next dev",
