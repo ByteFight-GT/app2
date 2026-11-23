@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
-    "build": "~/scripts/bytefightapp_build",
+    "build": "echo 'use buildwsl or buildwin'",
+    "buildwsl": "~/scripts/bytefightapp_build",
+    "buildwin": "../app2_build.ps1",
     "buildraw": "tauri build",
     "tauri": "tauri",
     "next:dev": "next dev",
