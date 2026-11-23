@@ -183,6 +183,15 @@ const SetupPage = () => {
 		titleEle="Setup"
 		subtitleEle="Get started running matches locally!">
 
+			<p className="text-muted-foreground mb-8">
+				Welcome to the Bytefight Desktop App!
+				Here you can locally test bots with a graphical game
+				visualization.
+				This page is a simple one-time setup guide to make
+				sure your environment is ready to run games via
+				the client wrapper.
+			</p>
+
 			<h2 className="text-3xl font-bold mb-4">Environment Setup</h2>
 
 			<SettingStep
