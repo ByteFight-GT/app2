@@ -12,20 +12,37 @@ use crate::paths::display;
 use crate::state::AppState;
 use crate::util::{CmdResult, copy_dir_recursive, reply, reply_with_fallback};
 
-/// Startup: create the bots dir and seed the example bot if it's missing.
-pub fn init(state: &AppState) -> Result<(), String> {
+/// Copies the bundled example bot into the configured bots dir (creating the
+/// dir if needed). Never overwrites: returns `Ok(false)` if it's already there,
+/// `Ok(true)` if it was copied.
+fn copy_example_bot(state: &AppState) -> Result<bool, String> {
     let bots_dir = state.configured_dir("Bots Directory")?;
     fs::create_dir_all(&bots_dir).map_err(|e| format!("{}: {e}", display(&bots_dir)))?;
 
     let example = state.paths.example_bot();
-    if let Some(name) = example.file_name() {
-        let dst = bots_dir.join(name);
-        if !dst.exists() && example.is_dir() {
-            copy_dir_recursive(&example, &dst)
-                .map_err(|e| format!("Failed to seed example bot: {e}"))?;
-        }
+    let name = example
+        .file_name()
+        .ok_or_else(|| "Example bot path is invalid".to_string())?;
+    if !example.is_dir() {
+        return Err(format!("Bundled example bot not found at {}", display(&example)));
     }
-    Ok(())
+    let dst = bots_dir.join(name);
+    if dst.exists() {
+        return Ok(false);
+    }
+    copy_dir_recursive(&example, &dst)
+        .map_err(|e| format!("Failed to copy example bot to {}: {e}", display(&dst)))?;
+    Ok(true)
+}
+
+/// Startup: create the bots dir and seed the example bot if it's missing.
+pub fn init(state: &AppState) -> Result<(), String> {
+    copy_example_bot(state).map(|_| ())
+}
+
+#[tauri::command]
+pub async fn bots_copy_example(state: State<'_, AppState>) -> CmdResult {
+    reply(copy_example_bot(&state).map(|copied| json!({ "alreadyExisted": !copied })))
 }
 
 pub fn validate_bot(bot_path: &Path) -> bool {

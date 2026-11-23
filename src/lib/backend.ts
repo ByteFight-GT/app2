@@ -41,6 +41,8 @@ export const backend: ElectronAPI = {
 	persistentStateGet: () => invoke('persistent_state_get'),
 	persistentStateSet: (patch) => invoke('persistent_state_set', { patch }),
 
+	openExternalUrl: (url) => invoke('open_external_url', { url }),
+
 	autosetupGetRequirements: () => invoke('autosetup_get_requirements'),
 	autosetupInstallRequirements: () => invoke('autosetup_install_requirements'),
 
@@ -57,6 +59,7 @@ export const backend: ElectronAPI = {
 	mapsWrite: (mapName, mapData) => invoke('maps_write', { mapName, mapData }),
 
 	botsList: () => invoke('bots_list'),
+	botsCopyExample: () => invoke('bots_copy_example'),
 	botsImport: () => invoke('bots_import'),
 
 	matchesReindex: () => invoke('matches_reindex'),

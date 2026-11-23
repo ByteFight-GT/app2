@@ -29,6 +29,8 @@ export type ElectronAPI = {
   persistentStateGet: () => Promise<PersistentState>;
   persistentStateSet: (patch: Partial<PersistentState>) => Promise<IPCResult<{ state: PersistentState }>>;
 
+  openExternalUrl: (url: string) => Promise<IPCResult>;
+
   autosetupGetRequirements: () => Promise<IPCResult<{ requirements: string[] }>>;
   autosetupInstallRequirements: () => Promise<IPCResult<{ stdout: string; stderr: string }>>;
 
@@ -53,6 +55,7 @@ export type ElectronAPI = {
   mapsWrite: (mapName: string, mapData: string) => Promise<IPCResult>;
 
   botsList: () => Promise<IPCResult<{ bots: string[] }>>;
+  botsCopyExample: () => Promise<IPCResult<{ alreadyExisted: boolean }>>;
   botsImport: () => Promise<IPCResult<{ imported: string[]; invalid: string[] }>>;
 
   matchesReadMany: (start: number, count: number) => Promise<IPCResult<{

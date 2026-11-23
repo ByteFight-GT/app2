@@ -16,6 +16,7 @@ export type GameConfig = {
 		singletonName: string;
 	};
 	overviewPage: string; // link
+	resourcesPage: string; // link
 };
 
 export const gameConfig: GameConfig = rawGameConfig;

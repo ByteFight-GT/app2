@@ -10,3 +10,4 @@ export * from "./FilledBar.tsx";
 export * from "./LoadingSpinner.tsx";
 export * from "./InputLabel.tsx";
 export * from "./FileInput.tsx";
+export * from "./ExternalLink.tsx";

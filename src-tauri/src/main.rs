@@ -6,6 +6,7 @@ mod autosetup;
 mod bots;
 mod dialogs;
 mod engine;
+mod external;
 mod gameconfig;
 mod logs;
 mod maps;
@@ -65,6 +66,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             persistent_state::persistent_state_get,
             persistent_state::persistent_state_set,
+            external::open_external_url,
             autosetup::autosetup_get_requirements,
             autosetup::autosetup_install_requirements,
             settings::settings_refresh,
@@ -78,6 +80,7 @@ fn main() {
             maps::maps_delete,
             maps::maps_import,
             bots::bots_list,
+            bots::bots_copy_example,
             bots::bots_import,
             matches::matches_reindex,
             matches::matches_readmany,
